@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 KingOfTheHill - FOMO Kings</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .game-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            opacity: 0.9;
+        }
+        
+        .info-value {
+            font-family: 'Courier New', monospace;
+        }
+        
+        .king-crown {
+            font-size: 2em;
+            margin: 0 10px;
+        }
+        
+        .status-active {
+            color: #4ade80;
+            font-weight: bold;
+        }
+        
+        .status-inactive {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+        
+        .action-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .action-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .connect-btn {
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 15px;
+            font-size: 1.1em;
+        }
+        
+        .wallet-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+        }
+        
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3c3;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .payout-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .payout-box {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .payout-percent {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .payout-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👑 KingOfTheHill</h1>
+        <p class="subtitle">FOMO Kings on Base Mainnet</p>
+        
+        <div id="messages"></div>
+        
+        <button class="connect-btn" id="connectBtn" onclick="connectWallet()">
+            🔌 Connect Wallet
+        </button>
+        
+        <div id="walletInfo" class="wallet-info" style="display: none;"></div>
+        
+        <div class="game-info" id="gameInfo">
+            <h2 style="text-align: center; margin-bottom: 20px;">
+                <span class="king-crown">👑</span> Current Game <span class="king-crown">👑</span>
+            </h2>
+            <div id="gameDetails">
+                <div class="loading">Loading game info...</div>
+            </div>
+            
+            <div class="payout-info">
+                <div class="payout-box">
+                    <div class="payout-percent">40%</div>
+                    <div class="payout-label">Winner</div>
+                </div>
+                <div class="payout-box">
+                    <div class="payout-percent">30%</div>
+                    <div class="payout-label">Burned</div>
+                </div>
+                <div class="payout-box">
+                    <div class="payout-percent">25%</div>
+                    <div class="payout-label">Dividends</div>
+                </div>
+                <div class="payout-box">
+                    <div class="payout-percent">5%</div>
+                    <div class="payout-label">Dev</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-section">
+            <h3>💰 Buy Keys</h3>
+            <div class="input-group">
+                <input type="number" id="buyAmount" placeholder="ETH amount (min 0.001)" step="0.001" value="0.001">
+                <button onclick="buyKeys()">Buy Keys</button>
+            </div>
+            <small style="color: #666;">1 key = 0.001 ETH | Each purchase makes you the king!</small>
+        </div>
+        
+        <div class="action-section">
+            <h3>💎 Your Dividends</h3>
+            <div id="dividendInfo" style="margin-bottom: 15px;">
+                <div class="loading">Connect wallet to view</div>
+            </div>
+            <button onclick="claimDividends()">Claim Dividends</button>
+        </div>
+        
+        <div class="action-section">
+            <h3>🏁 End Game</h3>
+            <p style="margin-bottom: 15px; color: #666;">
+                Anyone can end the game after the timer expires. The winner receives 40% of the pot!
+            </p>
+            <button onclick="endGame()">End Game & Distribute Payouts</button>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Contract:</strong> <a href="https://basescan.org/address/0xD2acb56C0eAE98BCcBaD5db2e5d5A651CfE0Ea38" target="_blank">0xD2acb56C0eAE98BCcBaD5db2e5d5A651CfE0Ea38</a></p>
+            <p><strong>Network:</strong> Base Mainnet | <strong>Min Buy:</strong> 0.001 ETH | <strong>Time Window:</strong> 5 minutes</p>
+            <p style="margin-top: 10px;">
+                <a href="https://github.com/prism-labs-nik/fomo-kings" target="_blank">GitHub</a> | 
+                <a href="https://docs.base.org" target="_blank">Base Docs</a>
+            </p>
+            <p style="margin-top: 10px; font-size: 0.8em; color: #999;">
+                ⚠️ High-risk game. Only play with what you can afford to lose.
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        const CONTRACT_ADDRESS = "0xD2acb56C0eAE98BCcBaD5db2e5d5A651CfE0Ea38";
+        const CONTRACT_ABI = [
+            "function buyKeys() external payable",
+            "function claimDividends() external",
+            "function endGame() external",
+            "function getGameInfo() external view returns (uint256, uint256, address, uint256, uint256, bool)",
+            "function pendingDividends(address) external view returns (uint256)",
+            "function keysOwned(address) external view returns (uint256)",
+            "function timeRemaining() external view returns (uint256)"
+        ];
+        
+        let provider;
+        let signer;
+        let contract;
+        let userAddress;
+        
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    showMessage('Please install MetaMask!', 'error');
+                    return;
+                }
+                
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                
+                // Check network
+                const network = await provider.getNetwork();
+                if (network.chainId !== 8453) {
+                    showMessage('Please switch to Base Mainnet (Chain ID: 8453)', 'error');
+                    return;
+                }
+                
+                signer = provider.getSigner();
+                userAddress = await signer.getAddress();
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('walletInfo').innerHTML = `Connected: ${userAddress}`;
+                document.getElementById('connectBtn').textContent = '✅ Wallet Connected';
+                document.getElementById('connectBtn').disabled = true;
+                
+                showMessage('Wallet connected successfully!', 'success');
+                updateGameInfo();
+                updateUserInfo();
+                
+                // Auto-refresh every 10 seconds
+                setInterval(() => {
+                    updateGameInfo();
+                    updateUserInfo();
+                }, 10000);
+                
+            } catch (error) {
+                showMessage('Error connecting wallet: ' + error.message, 'error');
+            }
+        }
+        
+        async function updateGameInfo() {
+            try {
+                const readContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, 
+                    provider || new ethers.providers.JsonRpcProvider('https://mainnet.base.org'));
+                
+                const gameInfo = await readContract.getGameInfo();
+                const timeLeft = await readContract.timeRemaining();
+                
+                const round = gameInfo[0].toString();
+                const pot = ethers.utils.formatEther(gameInfo[1]);
+                const king = gameInfo[2];
+                const keys = gameInfo[4].toString();
+                const active = gameInfo[5];
+                
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                document.getElementById('gameDetails').innerHTML = `
+                    <div class="info-row">
+                        <span class="info-label">Round</span>
+                        <span class="info-value">#${round}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Total Pot</span>
+                        <span class="info-value">${parseFloat(pot).toFixed(4)} ETH</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Current King</span>
+                        <span class="info-value">${king.substring(0, 10)}...${king.substring(king.length - 8)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Time Remaining</span>
+                        <span class="info-value">${timeStr}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Total Keys</span>
+                        <span class="info-value">${keys}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Status</span>
+                        <span class="info-value ${active ? 'status-active' : 'status-inactive'}">
+                            ${active ? '🟢 ACTIVE' : '🟡 ENDED'}
+                        </span>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error updating game info:', error);
+            }
+        }
+        
+        async function updateUserInfo() {
+            if (!contract || !userAddress) return;
+            
+            try {
+                const pending = await contract.pendingDividends(userAddress);
+                const keys = await contract.keysOwned(userAddress);
+                
+                document.getElementById('dividendInfo').innerHTML = `
+                    <div class="info-row" style="background: white; padding: 12px; border-radius: 8px; border: 2px solid #667eea;">
+                        <span class="info-label">Your Keys:</span>
+                        <span class="info-value">${keys.toString()}</span>
+                    </div>
+                    <div class="info-row" style="background: white; padding: 12px; border-radius: 8px; border: 2px solid #667eea; margin-top: 10px;">
+                        <span class="info-label">Pending Dividends:</span>
+                        <span class="info-value">${ethers.utils.formatEther(pending)} ETH</span>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error updating user info:', error);
+            }
+        }
+        
+        async function buyKeys() {
+            if (!contract) {
+                showMessage('Please connect your wallet first!', 'error');
+                return;
+            }
+            
+            try {
+                const amount = document.getElementById('buyAmount').value;
+                if (parseFloat(amount) < 0.001) {
+                    showMessage('Minimum buy is 0.001 ETH!', 'error');
+                    return;
+                }
+                
+                showMessage('Sending transaction...', 'success');
+                const tx = await contract.buyKeys({
+                    value: ethers.utils.parseEther(amount)
+                });
+                
+                showMessage('Waiting for confirmation...', 'success');
+                await tx.wait();
+                
+                showMessage('Keys purchased successfully! You are now the king! 👑', 'success');
+                updateGameInfo();
+                updateUserInfo();
+            } catch (error) {
+                showMessage('Error buying keys: ' + (error.reason || error.message), 'error');
+            }
+        }
+        
+        async function claimDividends() {
+            if (!contract) {
+                showMessage('Please connect your wallet first!', 'error');
+                return;
+            }
+            
+            try {
+                showMessage('Claiming dividends...', 'success');
+                const tx = await contract.claimDividends();
+                await tx.wait();
+                
+                showMessage('Dividends claimed successfully!', 'success');
+                updateUserInfo();
+            } catch (error) {
+                showMessage('Error claiming dividends: ' + (error.reason || error.message), 'error');
+            }
+        }
+        
+        async function endGame() {
+            if (!contract) {
+                showMessage('Please connect your wallet first!', 'error');
+                return;
+            }
+            
+            try {
+                showMessage('Ending game and distributing payouts...', 'success');
+                const tx = await contract.endGame();
+                await tx.wait();
+                
+                showMessage('Game ended! Payouts distributed. New round started!', 'success');
+                updateGameInfo();
+                updateUserInfo();
+            } catch (error) {
+                showMessage('Error ending game: ' + (error.reason || error.message), 'error');
+            }
+        }
+        
+        function showMessage(text, type) {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = text;
+            
+            const container = document.getElementById('messages');
+            container.appendChild(div);
+            
+            setTimeout(() => div.remove(), 5000);
+        }
+        
+        // Load game info on page load
+        window.addEventListener('load', () => {
+            updateGameInfo();
+            setInterval(updateGameInfo, 10000);
+        });
+    </script>
+</body>
+</html>
