@@ -553,17 +553,6 @@
       </button>
     </div>
 
-    <!-- Admin Section -->
-    <div id="adminSection" class="section" style="display: none; border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">
-      <div class="section-title">⚙️ Admin</div>
-      <button id="endGameBtn" class="btn btn-secondary" onclick="endGame()" style="background: #ffe0e0; color: #d32f2f;">
-        🛑 End Game & Distribute Pot
-      </button>
-      <div style="font-size: 11px; color: #999; margin-top: 8px; text-align: center;">
-        Only contract owner can call this
-      </div>
-    </div>
-
     <!-- Leaderboard -->
     <div class="leaderboard-section">
       <button class="leaderboard-toggle-btn" onclick="toggleLeaderboard()">
@@ -616,8 +605,6 @@
     const CONTRACT_ADDR = "0xD2acb56C0eAE98BCcBaD5db2e5d5A651CfE0Ea38";
     const ABI = [
       "function buyKeys() payable returns ()",
-      "function endGame() returns ()",
-      "function owner() view returns (address)",
       "function getGameInfo() view returns (uint256 round, uint256 pot, address king, uint256 timeLeft, uint256 keys, bool active)"
     ];
 
@@ -717,59 +704,11 @@
         document.getElementById("buyBtn").disabled = false;
         document.getElementById("kingCard").style.display = "block";
 
-        // Check if user is owner for admin section
-        try {
-          const owner = await contract.owner();
-          if (address.toLowerCase() === owner.toLowerCase()) {
-            document.getElementById("adminSection").style.display = "block";
-          }
-        } catch (e) {
-          console.log("Owner check skipped", e);
-        }
-
         showStatus("Wallet connected!", "success");
         await refreshStats();
         startTimer();
       } catch (error) {
         showStatus("Failed: " + error.message, "error");
-      }
-    }
-
-    async function endGame() {
-      if (!signer || !contract) {
-        showStatus("Connect wallet first", "error");
-        return;
-      }
-
-      try {
-        const endGameBtn = document.getElementById("endGameBtn");
-        const originalText = endGameBtn.textContent;
-        endGameBtn.disabled = true;
-        endGameBtn.innerHTML = '<div class="loading" style="display: inline-block;"></div> Processing...';
-
-        showStatus("Confirm endGame() in MetaMask...", "info");
-
-        const tx = await contract.endGame();
-
-        showStatus("Waiting for confirmation...", "info");
-        await tx.wait();
-
-        showStatus("✅ Game ended! Pot distributed to winner.", "success");
-        await refreshStats();
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        await refreshStats();
-      } catch (error) {
-        const errorMsg = error.message || error.reason || error;
-        if (errorMsg.includes("Only owner")) {
-          showStatus("Only the contract owner can end the game", "error");
-        } else if (errorMsg.includes("revert")) {
-          showStatus("Transaction reverted: " + error.reason, "error");
-        } else {
-          showStatus("Failed: " + errorMsg, "error");
-        }
-      } finally {
-        document.getElementById("endGameBtn").disabled = false;
-        document.getElementById("endGameBtn").textContent = originalText;
       }
     }
 
