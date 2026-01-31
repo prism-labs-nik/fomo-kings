@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👑 King-of-the-Hill - Be the Last Buyer</title>
+  <script src="https://cdn.ethers.org/v6/ethers.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .crown {
+      font-size: 60px;
+      margin-bottom: 10px;
+      animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    h1 {
+      color: #333;
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .content {
+      margin-bottom: 30px;
+    }
+    
+    .section {
+      margin-bottom: 25px;
+    }
+    
+    .section-title {
+      color: #f5576c;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    
+    .king-card {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    
+    .king-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+    
+    .king-address {
+      font-size: 14px;
+      font-weight: 600;
+      word-break: break-all;
+      margin-bottom: 12px;
+    }
+    
+    .timer-display {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .timer-label {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .pot-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+    
+    .pot-card {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .pot-label {
+      color: #999;
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    
+    .pot-value {
+      color: #333;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .status {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 15px;
+      display: none;
+    }
+    
+    .status.info {
+      background: #e3f2fd;
+      color: #1976d2;
+      display: block;
+    }
+    
+    .status.success {
+      background: #e8f5e9;
+      color: #388e3c;
+      display: block;
+    }
+    
+    .status.error {
+      background: #ffebee;
+      color: #d32f2f;
+      display: block;
+    }
+    
+    .buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(245, 87, 108, 0.3);
+    }
+    
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .btn-secondary:hover:not(:disabled) {
+      background: #e0e0e0;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .input-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      color: #666;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #f5576c;
+    }
+    
+    .footer {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      color: #999;
+      font-size: 12px;
+    }
+    
+    .wallet-info {
+      padding: 12px 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-top: 10px;
+      display: none;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="crown">👑</div>
+      <h1>King-of-the-Hill</h1>
+      <div class="subtitle">Base Mainnet • Last Buyer Wins • 5 Min Timer</div>
+    </div>
+    
+    <div class="content">
+      <!-- Status Messages -->
+      <div id="status" class="status"></div>
+      
+      <!-- Wallet Connection -->
+      <div class="section">
+        <div class="section-title">Wallet</div>
+        <button id="connectBtn" class="btn btn-primary" onclick="connectWallet()" style="width: 100%;">
+          Connect MetaMask
+        </button>
+        <div id="walletInfo" class="wallet-info">
+          <div style="color: #999; margin-bottom: 4px;">Connected Account</div>
+          <div id="walletAddress" style="color: #333; font-weight: 600; word-break: break-all;"></div>
+          <div style="color: #999; margin-top: 8px;">Balance</div>
+          <div id="walletBalance" style="color: #333; font-weight: 600;"></div>
+        </div>
+      </div>
+      
+      <!-- Current King -->
+      <div class="section">
+        <div id="kingCard" class="king-card" style="display: none;">
+          <div class="king-title">👑 Current King</div>
+          <div class="king-address" id="kingAddress">-</div>
+          <div class="timer-display" id="timerDisplay">00:00:00</div>
+          <div class="timer-label">Time Until Game Ends</div>
+        </div>
+      </div>
+      
+      <!-- Game Stats -->
+      <div class="section">
+        <div class="pot-info">
+          <div class="pot-card">
+            <div class="pot-label">Pot Value</div>
+            <div id="potValue" class="pot-value">-</div>
+          </div>
+          <div class="pot-card">
+            <div class="pot-label">Total Keys</div>
+            <div id="totalKeys" class="pot-value">-</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Buy Keys -->
+      <div class="section">
+        <div class="section-title">Buy Keys</div>
+        
+        <div class="input-group">
+          <label for="keyAmount">Amount (ETH)</label>
+          <input 
+            type="number" 
+            id="keyAmount" 
+            placeholder="0.001" 
+            min="0.001" 
+            step="0.001"
+            value="0.001"
+          >
+          <div style="font-size: 12px; color: #999; margin-top: 6px;">
+            Minimum: 0.001 ETH | Become king! | Timer resets with each purchase
+          </div>
+        </div>
+        
+        <div class="buttons">
+          <button id="buyBtn" class="btn btn-primary" onclick="buyKeys()" disabled style="flex: 2;">
+            👑 Become King
+          </button>
+          <button class="btn btn-secondary" onclick="refreshStats()" style="flex: 1;">
+            Refresh
+          </button>
+        </div>
+      </div>
+      
+      <!-- End Game -->
+      <div class="section">
+        <button id="endBtn" class="btn btn-primary" onclick="endGame()" disabled style="width: 100%;">
+          🎉 End Game & Distribute
+        </button>
+        <div style="font-size: 12px; color: #999; margin-top: 8px; text-align: center;">
+          Call after timer expires to distribute winnings
+        </div>
+      </div>
+      
+      <!-- Your Stats -->
+      <div class="section">
+        <div class="section-title">Your Stats</div>
+        <div class="pot-info">
+          <div class="pot-card">
+            <div class="pot-label">Your Keys</div>
+            <div id="yourKeys" class="pot-value">-</div>
+          </div>
+          <div class="pot-card">
+            <div class="pot-label">Dividends</div>
+            <div id="yourDividends" class="pot-value">-</div>
+          </div>
+        </div>
+        <button id="claimBtn" class="btn btn-primary" onclick="claimDividends()" disabled style="width: 100%; margin-top: 12px;">
+          Claim Dividends
+        </button>
+      </div>
+    </div>
+    
+    <div class="footer">
+      Contract: 0x... (TBD)<br>
+      <a href="https://basescan.org" target="_blank" style="color: #f5576c;">View on BaseScan</a>
+    </div>
+  </div>
+  
+  <script>
+    let signer = null;
+    let contract = null;
+    let timerInterval = null;
+    
+    async function connectWallet() {
+      try {
+        if (!window.ethereum) {
+          showStatus("MetaMask not detected. Please install it.", "error");
+          return;
+        }
+        
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        
+        const address = await signer.getAddress();
+        const balance = await provider.getBalance(address);
+        
+        document.getElementById("walletAddress").textContent = address;
+        document.getElementById("walletBalance").textContent = ethers.formatEther(balance) + " ETH";
+        document.getElementById("walletInfo").style.display = "block";
+        document.getElementById("connectBtn").textContent = "✓ Connected";
+        document.getElementById("connectBtn").disabled = true;
+        document.getElementById("buyBtn").disabled = false;
+        document.getElementById("endBtn").disabled = false;
+        document.getElementById("claimBtn").disabled = false;
+        document.getElementById("kingCard").style.display = "block";
+        
+        showStatus("Wallet connected! You can now buy keys.", "success");
+        await refreshStats();
+        startTimer();
+      } catch (error) {
+        showStatus("Failed to connect wallet: " + error.message, "error");
+      }
+    }
+    
+    async function buyKeys() {
+      if (!signer || !contract) {
+        showStatus("Please connect your wallet first", "error");
+        return;
+      }
+      
+      try {
+        const amount = document.getElementById("keyAmount").value;
+        if (!amount || parseFloat(amount) < 0.001) {
+          showStatus("Minimum is 0.001 ETH", "error");
+          return;
+        }
+        
+        document.getElementById("buyBtn").disabled = true;
+        document.getElementById("buyBtn").innerHTML = '<div class="loading"></div> Buying...';
+        showStatus("Confirm transaction in MetaMask...", "info");
+        
+        showStatus("Feature ready: Contract deployment pending", "info");
+        document.getElementById("buyBtn").innerHTML = "👑 Become King";
+      } catch (error) {
+        showStatus("Transaction failed: " + error.message, "error");
+        document.getElementById("buyBtn").innerHTML = "👑 Become King";
+      } finally {
+        document.getElementById("buyBtn").disabled = false;
+      }
+    }
+    
+    async function endGame() {
+      if (!signer || !contract) {
+        showStatus("Please connect your wallet first", "error");
+        return;
+      }
+      
+      try {
+        document.getElementById("endBtn").disabled = true;
+        document.getElementById("endBtn").innerHTML = '<div class="loading"></div> Processing...';
+        showStatus("Distributing winnings...", "info");
+        
+        showStatus("Feature ready: Contract deployment pending", "info");
+        document.getElementById("endBtn").innerHTML = "🎉 End Game & Distribute";
+      } catch (error) {
+        showStatus("Failed to end game: " + error.message, "error");
+        document.getElementById("endBtn").innerHTML = "🎉 End Game & Distribute";
+      } finally {
+        document.getElementById("endBtn").disabled = false;
+      }
+    }
+    
+    async function claimDividends() {
+      if (!signer || !contract) {
+        showStatus("Please connect your wallet first", "error");
+        return;
+      }
+      
+      try {
+        document.getElementById("claimBtn").disabled = true;
+        document.getElementById("claimBtn").innerHTML = '<div class="loading"></div> Claiming...';
+        
+        showStatus("Claim feature ready: Contract deployment pending", "info");
+        document.getElementById("claimBtn").innerHTML = "Claim Dividends";
+      } catch (error) {
+        showStatus("Claim failed: " + error.message, "error");
+        document.getElementById("claimBtn").innerHTML = "Claim Dividends";
+      } finally {
+        document.getElementById("claimBtn").disabled = false;
+      }
+    }
+    
+    async function refreshStats() {
+      // Placeholder: will update with real stats after deployment
+      document.getElementById("potValue").textContent = "-";
+      document.getElementById("totalKeys").textContent = "-";
+      document.getElementById("yourKeys").textContent = "-";
+      document.getElementById("yourDividends").textContent = "-";
+      document.getElementById("kingAddress").textContent = "Waiting...";
+    }
+    
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      updateTimer();
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+    
+    function updateTimer() {
+      // Placeholder timer: shows ~5 minutes
+      const secondsLeft = 300 - (Math.floor(Date.now() / 1000) % 300);
+      const mins = Math.floor(secondsLeft / 60);
+      const secs = secondsLeft % 60;
+      
+      document.getElementById("timerDisplay").textContent = 
+        String(mins).padStart(2, '0') + ':' +
+        String(secs).padStart(2, '0');
+    }
+    
+    function showStatus(message, type) {
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = message;
+      statusEl.className = "status " + type;
+    }
+    
+    // Initial load
+    window.addEventListener("load", () => {
+      if (window.ethereum) {
+        document.getElementById("connectBtn").textContent = "Connect MetaMask";
+      }
+    });
+  </script>
+</body>
+</html>
