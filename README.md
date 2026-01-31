@@ -1,202 +1,267 @@
-# 👑 King-of-the-Hill (FOMO Kings)
+# 👑 KingOfTheHill (FOMO Kings)
 
-A high-octane on-chain game built with Solidity, deployed to Base Mainnet. Last buyer becomes the king and wins the pot!
+A FOMO3D-inspired king-of-the-hill game on Base mainnet where players compete to be the last buyer and claim the prize pot.
 
-## Quick Start
+## 🎮 How It Works
+
+Players buy keys with ETH. Each purchase:
+- Crowns a new king (the buyer)
+- Extends the timer by resetting it to 5 minutes
+- Adds to the growing prize pot
+
+When the timer expires, the last buyer (current king) wins **40% of the pot**. The game then automatically restarts for a new round.
+
+## 📊 Contract Details
+
+**🔗 Deployed Contract:** [`0xD2acb56C0eAE98BCcBaD5db2e5d5A651CfE0Ea38`](https://basescan.org/address/0xD2acb56C0eAE98BCcBaD5db2e5d5A651CfE0Ea38)  
+**⛓️ Network:** Base Mainnet (Chain ID: 8453)  
+**💎 Minimum Buy:** 0.001 ETH (1 key)  
+**⏰ Time Window:** 5 minutes (adjustable by owner)
+
+## 💰 Payout Distribution
+
+When a round ends:
+
+| Recipient | Percentage | Purpose |
+|-----------|-----------|---------|
+| 👑 **Winner** | 40% | Last buyer before timer expires |
+| 🔥 **Burned** | 30% | Sent to dead address (deflationary) |
+| 💎 **Key Holders** | 25% | Distributed as dividends to all key holders |
+| 🛠️ **Dev** | 5% | Development and maintenance |
+
+## 🚀 Quick Start
+
+### For Players
+
+#### Buy Keys (Web3)
+
+```javascript
+// Using ethers.js
+const contract = new ethers.Contract(
+  "0xD2acb56C0eAE98BCcBaD5db2e5d5A651CfE0Ea38",
+  ABI,
+  signer
+);
+
+// Buy 5 keys (0.005 ETH)
+await contract.buyKeys({ value: ethers.parseEther("0.005") });
+```
+
+#### Check Game Status
+
+```javascript
+const gameInfo = await contract.getGameInfo();
+console.log({
+  round: gameInfo[0].toString(),
+  pot: ethers.formatEther(gameInfo[1]),
+  king: gameInfo[2],
+  timeLeft: gameInfo[3].toString() + " seconds",
+  totalKeys: gameInfo[4].toString(),
+  active: gameInfo[5]
+});
+```
+
+#### Claim Dividends
+
+```javascript
+// Check pending dividends
+const pending = await contract.pendingDividends(yourAddress);
+console.log("Pending:", ethers.formatEther(pending), "ETH");
+
+// Claim dividends
+await contract.claimDividends();
+```
+
+### For Developers
+
+#### Installation
 
 ```bash
+git clone https://github.com/prism-labs-nik/fomo-kings.git
+cd fomo-kings
 npm install
-npx hardhat compile
-npx hardhat run scripts/deploy.js --network base
 ```
 
-## Game Mechanics
-
-### Buy Keys
-- **Price:** 0.001 ETH per key
-- **Action:** Call `buyKeys()` with any ETH amount >= 0.001
-- **Effect:** Become the new king (if you're the last buyer within 5 minutes)
-- **Multiplicity:** Buy multiple keys in one transaction
-- **Timer Reset:** Each purchase resets the 5-minute countdown
-
-### Time Window
-- **Default:** 5 minutes (adjustable by owner)
-- **Trigger:** Game ends if no purchases for 5 minutes
-- **Countdown:** Real-time visible (blocks until end)
-
-### Game Ends
-- **Trigger:** 5 minutes pass with no new purchases
-- **Winner:** Current king (last buyer)
-- **Method:** Anyone can call `endGame()` to claim winnings
-- **Auto-Restart:** New round starts immediately
-
-### Payouts
-- **40%** → King (last buyer)
-- **30%** → Burned (value accumulation)
-- **25%** → Dividend pool (split among all key holders)
-- **5%** → Dev fee
-
-## Example Gameplay
-
-```
-Game 1 (Round):
-[00:00] Player A buys 5 keys (0.005 ETH) → Crowned king
-[01:30] Player B buys 3 keys (0.003 ETH) → Becomes new king, timer resets
-[06:30] 5 minutes pass with no purchases → Game ends!
-[06:31] Anyone calls endGame() → Payouts distributed:
-        - Player B (king) gets: 0.008 * 0.40 = 0.0032 ETH
-        - Burned: 0.008 * 0.30 = 0.0024 ETH
-        - Dividends: 0.008 * 0.25 = 0.002 ETH (split by keys)
-        - Dev: 0.008 * 0.05 = 0.0004 ETH
-[06:32] New game starts automatically (Round 2)
-```
-
-## Contract Interface
-
-### User Functions
-- `buyKeys()` (payable) — Buy keys and become king
-- `endGame()` — Trigger payout and start new round
-- `claimDividends()` — Claim accumulated rewards
-- `getGameInfo()` — View game state
-- `timeRemaining()` — Check seconds until game ends
-- `isGameActive()` — Is a game in progress?
-- `pendingDividends(address)` — Check unclaimed rewards
-- `getTicketCount(address)` — Check key balance
-
-### Admin Functions
-- `setTimeWindow(uint256)` — Change time window (1-60 minutes)
-- `setDevAddress(address)` — Change dev fee destination
-- `pause()` / `unpause()` — Emergency pause
-- (Owner only)
-
-## Security Features
-
-- ✅ **ReentrancyGuard** — Prevents reentrancy attacks
-- ✅ **Ownable** — Restricted admin functions
-- ✅ **State Management** — Safe pot distribution
-- ✅ **Dividend Tracking** — Cross-round accumulation
-- ✅ **Emergency Pause** — Pause/unpause mechanism
-
-## Deployment
-
-### Network: Base Mainnet
-```
-Chain ID: 8453
-RPC: https://mainnet.base.org
-Explorer: https://basescan.org
-```
-
-### Environment
-```bash
-# .env file
-PRIVATE_KEY=your_private_key
-BASE_RPC=https://mainnet.base.org
-```
-
-### Deploy
-```bash
-npx hardhat run scripts/deploy.js --network base
-```
-
-### Verify on BaseScan
-```bash
-npx hardhat verify --network base <CONTRACT_ADDRESS>
-```
-
-## Gas Costs (Estimated)
-
-| Action | Gas | Cost (Base) |
-|--------|-----|-----------|
-| Deploy | 200k | ~$0.002 |
-| buyKeys() | 80k | ~$0.0002 |
-| endGame() | 150k | ~$0.0003 |
-| claimDividends() | 60k | ~$0.0001 |
-
-## Testing
+#### Run Tests
 
 ```bash
-npm install  # Install OpenZeppelin for tests
 npx hardhat test
 ```
 
-Tests cover:
-- ✅ Key purchasing and king tracking
-- ✅ Time window mechanics
-- ✅ Game ending and payout distribution
-- ✅ Dividend accumulation and claims
-- ✅ Admin functions
-- ✅ Reentrancy protection
-- ✅ Edge cases (multiple rounds, large player counts)
+All 31 tests should pass! See [TESTING.md](./TESTING.md) for detailed testing guide.
 
-## Architecture
+#### Deploy to Testnet
 
-```
-KingOfTheHill.sol
-├── Key Management (per-player tracking)
-├── King State (current king + crown time)
-├── Pot Management (current round + lifetime)
-├── Dividend System (cross-round tracking)
-├── Game Lifecycle (active → ended → restart)
-├── Payout Distribution (40/30/25/5 split)
-├── Admin Controls (owner-gated)
-├── Emergency Functions (pause/unpause/withdraw)
-└── Events (all state changes logged)
+```bash
+# Configure .env
+echo "PRIVATE_KEY=your_private_key" > .env
+
+# Deploy to Base Sepolia
+npx hardhat run scripts/deploy.js --network baseSepolia
 ```
 
-## How to Play
+## 📋 Contract Functions
 
-1. **Fund Wallet:** Get Base ETH (bridge or exchange)
-2. **Visit Contract:** https://basescan.org/address/{CONTRACT_ADDRESS}
-3. **Buy Keys:** Write Contract → `buyKeys()` → value 0.001 ETH
-4. **Become King:** Confirm in MetaMask
-5. **Watch Timer:** Check time remaining via `timeRemaining()`
-6. **End Game:** Call `endGame()` when countdown reaches zero
-7. **Claim Dividends:** Call `claimDividends()` to collect your share
+### Player Functions
 
-## Economics
+| Function | Parameters | Description |
+|----------|-----------|-------------|
+| `buyKeys()` | `payable` | Buy keys with ETH (min 0.001 ETH) |
+| `claimDividends()` | - | Claim accumulated dividends |
+| `endGame()` | - | End game after timer expires (anyone can call) |
 
-### Revenue Model
-- **Dev Fee:** 5% per game
-- **Value Accumulation:** 30% burned per game + dividends
-- **Engagement:** Multiple rounds encourage repeated play
+### View Functions
 
-### Example Revenue
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `getGameInfo()` | `(round, pot, king, timeLeft, keys, active)` | Complete game state |
+| `timeRemaining()` | `uint256` | Seconds until game ends |
+| `isGameActive()` | `bool` | Whether game is currently active |
+| `pendingDividends(address)` | `uint256` | Unclaimed dividends for address |
+| `keysOwned(address)` | `uint256` | Number of keys owned by address |
+
+### Admin Functions (Owner Only)
+
+| Function | Parameters | Description |
+|----------|-----------|-------------|
+| `setTimeWindow(uint256)` | `newWindow` | Update time window (1 min - 1 hour) |
+| `setDevAddress(address)` | `newDev` | Update dev fee recipient |
+| `pause()` | - | Pause the game |
+| `unpause()` | - | Unpause the game |
+| `emergencyWithdraw()` | - | Emergency withdraw (paused + no active game) |
+
+## 🔐 Security Features
+
+- ✅ **ReentrancyGuard:** Protection against reentrancy attacks on all state-changing functions
+- ✅ **Access Control:** OpenZeppelin Ownable for admin functions
+- ✅ **SafeMath:** Solidity 0.8.20 native overflow protection
+- ✅ **Emergency Pause:** Owner can pause game in emergencies
+- ✅ **Input Validation:** All functions validate inputs
+- ✅ **Audited Patterns:** Uses battle-tested OpenZeppelin contracts
+
+## 🎯 Game Mechanics
+
+### Key Pricing
+
+Keys are priced at **1 key = 0.001 ETH**. You can buy multiple keys in one transaction:
+
+- 0.001 ETH = 1 key
+- 0.005 ETH = 5 keys
+- 0.010 ETH = 10 keys
+- etc.
+
+### Becoming King
+
+Every purchase crowns a new king. The timer resets to 5 minutes with each purchase, giving others a chance to steal the crown.
+
+### Winning
+
+If the timer expires and you're the current king, you win! Call `endGame()` (or anyone can) to:
+1. Distribute payouts (40% to you!)
+2. Send dividends to key holders
+3. Burn 30% of the pot
+4. Send 5% to dev
+5. Restart the game automatically
+
+### Dividends
+
+Key holders earn 25% of every pot as dividends. The more keys you hold, the larger your share. Dividends persist across rounds—claim them anytime!
+
+## 📈 Example Round
+
 ```
-Scenario: 10 games, 1 ETH wagered per game
-- Total wagered: 10 ETH
-- Dev earned: 10 * 0.05 = 0.5 ETH
-- Burned/accumulated: 10 * 0.30 = 3 ETH
-- Dividend pool distributed: 10 * 0.25 = 2.5 ETH
+Round 1 Starts:
+├─ Player A buys 10 keys (0.01 ETH) → King 👑, Timer: 5:00
+├─ Player B buys 5 keys (0.005 ETH) → King 👑, Timer: 5:00
+├─ Player C buys 3 keys (0.003 ETH) → King 👑, Timer: 5:00
+└─ Timer expires... 🔔
+
+Payouts:
+├─ Player C (Winner): 0.0072 ETH (40%)
+├─ Burned: 0.0054 ETH (30%)
+├─ Dividends: 0.0045 ETH (25%) → Split among 18 keys
+│  ├─ Player A: ~0.0025 ETH (10 keys)
+│  ├─ Player B: ~0.00125 ETH (5 keys)
+│  └─ Player C: ~0.00075 ETH (3 keys)
+└─ Dev: 0.0009 ETH (5%)
+
+Round 2 Starts... 🔄
 ```
 
-## Future Improvements
+## 🛠️ Technology Stack
 
-- [ ] NFT king crowns (ERC-721)
-- [ ] Leaderboards (all-time winners)
-- [ ] Anti-whale mechanics (max keys per round)
-- [ ] Progressive time windows (longer as game ages)
-- [ ] ERC20 integration (buy with tokens)
-- [ ] Chainlink Automation (auto-end games)
+- **Smart Contract:** Solidity 0.8.20
+- **Framework:** Hardhat
+- **Testing:** Chai, Hardhat Network Helpers
+- **Dependencies:** OpenZeppelin Contracts (ReentrancyGuard, Ownable)
+- **Network:** Base (Ethereum L2)
 
-## Differences from Dice
+## 📊 Gas Costs
 
-| Feature | Dice | FOMO Kings |
-|---------|------|-----------|
-| Duration | Instant (1 block) | 5 minutes |
-| Mechanics | 50/50 roll | Last-buyer race |
-| Multiplier | 1.5x on win | 40% of pot |
-| Speed | Fast | Engaging |
-| Skill Factor | None | Timing/strategy |
+Based on test runs:
 
-## License
+| Action | Gas Cost | ETH Cost* |
+|--------|----------|-----------|
+| Deploy Contract | ~1,353,299 | ~$0.05 |
+| Buy Keys (First) | ~146,194 | ~$0.005 |
+| Buy Keys (Subsequent) | ~77,794 | ~$0.003 |
+| End Game | ~134,431 | ~$0.005 |
+| Claim Dividends | ~67,947 | ~$0.002 |
 
-MIT
+*Estimated at 0.5 gwei gas price on Base
 
-## Contact
+## 🧪 Testing
 
-Built by Prism Labs  
-GitHub: [prism-labs-nik](https://github.com/prism-labs-nik)
+We have **31 comprehensive tests** covering:
+
+- ✅ Deployment & initialization
+- ✅ Key buying mechanics
+- ✅ Time window & game lifecycle
+- ✅ Payout distribution
+- ✅ Dividend calculation & claiming
+- ✅ Admin functions & access control
+- ✅ Edge cases & multi-round games
+- ✅ Security (reentrancy, etc.)
+
+Run tests:
+```bash
+npx hardhat test
+```
+
+See [TESTING.md](./TESTING.md) for detailed testing guide.
+
+## 🔮 Future Enhancements
+
+Potential v2 features:
+
+- 🎨 NFT rewards for winners
+- 📈 Dynamic key pricing (bonding curve)
+- 🎁 Referral rewards
+- 🌐 Multi-chain deployment
+- 📱 Web interface/dApp
+- 🤖 Telegram/Discord bot integration
+
+## ⚠️ Disclaimer
+
+This is a **high-risk game** where you can lose all your ETH. Only play with what you can afford to lose. The contract is provided "as is" without warranty. While security best practices were followed, no audit has been performed. DYOR (Do Your Own Research).
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 🤝 Contributing
+
+Contributions welcome! Please open an issue or PR.
+
+## 📞 Support
+
+- **Issues:** [GitHub Issues](https://github.com/prism-labs-nik/fomo-kings/issues)
+- **Contract:** [BaseScan](https://basescan.org/address/0xD2acb56C0eAE98BCcBaD5db2e5d5A651CfE0Ea38)
+
+## 🎉 Credits
+
+Inspired by FOMO3D and built for the Base ecosystem.
 
 ---
 
-**Status:** Ready to deploy on Base | Compiled ✅ | Tested ✅
+**Built with ❤️ on Base** | **Contract:** `0xD2acb56C0eAE98BCcBaD5db2e5d5A651CfE0Ea38`

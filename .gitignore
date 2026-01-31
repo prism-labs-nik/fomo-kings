@@ -1,0 +1,38 @@
+node_modules
+.env
+.env.test
+.env.production
+.DS_Store
+
+# Hardhat files
+cache
+artifacts
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Local development
+.openzeppelin
+deployments
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+.nyc_output
+
+# Build
+dist
+build
